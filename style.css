@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #003399 0%, #0055cc 100%);
     min-height: 100vh;
     padding: 20px;
 }
@@ -23,9 +23,32 @@ body {
     box-shadow: 0 20px 40px rgba(0,0,0,0.1);
 }
 
+/* Logo da empresa */
+.logo {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.logo-img {
+    max-width: 120px;
+    margin-bottom: 10px;
+}
+
+.logo-nome {
+    font-size: 18px;
+    color: #003399;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.logo-sub {
+    font-size: 12px;
+    color: #666;
+}
+
 h1 {
     text-align: center;
-    color: #333;
+    color: #003399;
     margin-bottom: 10px;
 }
 
@@ -39,15 +62,21 @@ input, select {
     width: 100%;
     padding: 12px;
     margin: 10px 0;
-    border: 1px solid #ddd;
+    border: 2px solid #ddd;
     border-radius: 8px;
     font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: #003399;
 }
 
 button {
     width: 100%;
     padding: 12px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #003399 0%, #0055cc 100%);
     color: white;
     border: none;
     border-radius: 8px;
@@ -91,6 +120,7 @@ button:hover {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .abas button {
@@ -100,7 +130,7 @@ button:hover {
 }
 
 .abas button.aba-ativa {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #003399 0%, #0055cc 100%);
     color: white;
 }
 
@@ -118,7 +148,7 @@ button:hover {
 .card h2 {
     font-size: 18px;
     margin-bottom: 15px;
-    color: #333;
+    color: #003399;
 }
 
 label {
@@ -143,10 +173,11 @@ small {
     padding: 15px;
     margin: 10px 0;
     border-radius: 10px;
-    border-left: 4px solid #28a745;
+    border-left: 4px solid #003399;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .item-funcionario button {
@@ -161,18 +192,20 @@ small {
     padding: 15px;
     margin: 10px 0;
     border-radius: 10px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #003399;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .item-contracheque a {
-    color: #667eea;
+    color: #003399;
     text-decoration: none;
     font-weight: bold;
 }
 
+/* Botões específicos */
 .btn-pdf {
     display: inline-block;
     background: #28a745;
@@ -181,9 +214,82 @@ small {
     text-decoration: none;
     border-radius: 8px;
     margin-top: 15px;
+    margin-right: 10px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.btn-whatsapp {
+    display: inline-block;
+    background: #25D366;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-weight: bold;
+    text-align: center;
 }
 
 .btn-voltar {
     background: #6c757d;
     margin-top: 20px;
+}
+
+.btn-baixar {
+    display: inline-block;
+    background: #007bff;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 8px;
+    margin-top: 15px;
+    margin-right: 10px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.botoes-acao {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.status-visualizado {
+    background: #28a745;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: inline-block;
+}
+
+.status-nao-visualizado {
+    background: #dc3545;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: inline-block;
+}
+
+.relatorio-item {
+    background: white;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sucesso {
+    background: #28a745;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 10px;
 }
