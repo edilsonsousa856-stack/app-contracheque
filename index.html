@@ -2,34 +2,51 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <meta http-equiv='cache-control' content='no-cache'>
     <meta http-equiv='expires' content='0'>
     <meta http-equiv='pragma' content='no-cache'>
-    <title>Meu Contracheque</title>
+    <title>TOPGEO - Meu Contracheque</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <!-- TELA DE LOGIN -->
         <div id="telaLogin" class="login-box">
-            <div style="text-align:center; margin-bottom:20px;">
-                <div style="font-size:50px;">📄</div>
-                <h1>Meu Contracheque</h1>
-                <p>Digite seu código e senha</p>
+            <div class="logo">
+                <div style="font-size: 60px;">📄</div>
+                <div class="logo-nome">TOPGEO</div>
+                <div class="logo-sub">ENGENHARIA E SERVIÇOS LTDA</div>
             </div>
+            
+            <h1>Meu Contracheque</h1>
+            <p>Digite seu código e senha</p>
             
             <input type="text" id="codigoLogin" placeholder="Código do funcionário">
             <input type="password" id="senhaLogin" placeholder="Sua senha">
             <button onclick="fazerLogin()">Entrar</button>
             
+            <div style="text-align:center; margin-top:15px;">
+                <a href="#" onclick="mostrarRecuperarSenha()" style="color:#003399; text-decoration:none;">🔑 Esqueci minha senha</a>
+            </div>
+            
             <div id="msgErro" class="erro" style="margin-top:15px;"></div>
         </div>
         
-        <!-- TELA DO CONTRACHEQUE (aparece depois do login) -->
+        <!-- TELA DE RECUPERAR SENHA -->
+        <div id="telaRecuperar" class="login-box" style="display:none;">
+            <h2>🔑 Recuperar Senha</h2>
+            <p>Digite seu código de funcionário</p>
+            <input type="text" id="codigoRecuperar" placeholder="Código do funcionário">
+            <button onclick="recuperarSenha()">Enviar nova senha por email</button>
+            <button onclick="voltarLoginRecuperar()" class="btn-voltar">Voltar</button>
+            <div id="msgRecuperar" class="erro"></div>
+        </div>
+        
+        <!-- TELA DO CONTRACHEQUE -->
         <div id="telaContracheque" class="login-box" style="display:none;">
             <div id="conteudoContracheque"></div>
-            <button onclick="voltarLogin()" class="btn-voltar">Voltar</button>
+            <button onclick="voltarLogin()" class="btn-voltar">Sair</button>
         </div>
     </div>
     
