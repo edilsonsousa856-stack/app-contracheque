@@ -1,24 +1,36 @@
 // ============================================
-// SISTEMA TOPGEO - CONTRA CHEQUES COMPLETO
+// SISTEMA TOPGEO - VERSÃO COM DADOS PADRÃO
 // ============================================
+
+// FUNCIONÁRIOS PADRÃO (existem em todos os dispositivos)
+const FUNCIONARIOS_PADRAO = [
+    { id: 1, codigo: "FUNC001", nome: "João Silva", senha: "123456", email: "joao@exemplo.com" },
+    { id: 2, codigo: "FUNC002", nome: "Maria Santos", senha: "123456", email: "maria@exemplo.com" },
+    { id: 3, codigo: "FUNC003", nome: "Carlos Souza", senha: "123456", email: "carlos@exemplo.com" },
+    { id: 4, codigo: "FUNC004", nome: "Ana Oliveira", senha: "123456", email: "ana@exemplo.com" },
+    { id: 5, codigo: "FUNC005", nome: "Pedro Lima", senha: "123456", email: "pedro@exemplo.com" }
+];
 
 let funcionarios = [];
 let contracheques = [];
 
 // ========== CARREGAR DADOS ==========
 function carregarDados() {
-    const funcSalvos = localStorage.getItem('funcionarios');
-    const contSalvos = localStorage.getItem('contracheques');
+    // Carregar funcionários (ou usar os padrão)
+    let funcSalvos = localStorage.getItem('funcionarios');
     
-    if (funcSalvos) funcionarios = JSON.parse(funcSalvos);
-    if (contSalvos) contracheques = JSON.parse(contSalvos);
-    
-    if (funcionarios.length === 0) {
-        funcionarios = [
-            { id: 1, codigo: "FUNC001", nome: "João Silva", senha: "123456", email: "joao@exemplo.com" },
-            { id: 2, codigo: "FUNC002", nome: "Maria Santos", senha: "123456", email: "maria@exemplo.com" }
-        ];
+    if (funcSalvos) {
+        funcionarios = JSON.parse(funcSalvos);
+    } else {
+        // Primeira vez: carregar funcionários padrão
+        funcionarios = [...FUNCIONARIOS_PADRAO];
         salvarFuncionarios();
+    }
+    
+    // Carregar contracheques
+    const contSalvos = localStorage.getItem('contracheques');
+    if (contSalvos) {
+        contracheques = JSON.parse(contSalvos);
     }
 }
 
@@ -28,24 +40,6 @@ function salvarFuncionarios() {
 
 function salvarContracheques() {
     localStorage.setItem('contracheques', JSON.stringify(contracheques));
-}
-
-// ========== FUNÇÃO PARA ENVIAR EMAIL (SIMULADA) ==========
-function enviarEmail(destinatario, assunto, mensagem) {
-    console.log(`📧 Email enviado para ${destinatario}`);
-    console.log(`Assunto: ${assunto}`);
-    console.log(`Mensagem: ${mensagem}`);
-    
-    // Salvar notificação
-    const notificacoes = JSON.parse(localStorage.getItem('notificacoes') || '[]');
-    notificacoes.push({
-        destinatario: destinatario,
-        assunto: assunto,
-        data: new Date().toLocaleString()
-    });
-    localStorage.setItem('notificacoes', JSON.stringify(notificacoes));
-    
-    return true;
 }
 
 // ========== PARTE DO COLABORADOR ==========
@@ -58,6 +52,7 @@ function fazerLogin() {
         return;
     }
     
+    // Buscar funcionário
     const funcionario = funcionarios.find(f => f.codigo === codigo && f.senha === senha);
     
     if (!funcionario) {
@@ -68,62 +63,59 @@ function fazerLogin() {
     // Buscar contracheques deste funcionário
     const meusContraches = contracheques.filter(c => c.funcionarioId === funcionario.id);
     
-    if (meusContraches.length === 0) {
-        mostrarErro('Nenhum contracheque encontrado.');
-        return;
-    }
-    
     // Mostrar tela do contracheque
     document.getElementById('telaLogin').style.display = 'none';
     document.getElementById('telaContracheque').style.display = 'block';
     
     const conteudoDiv = document.getElementById('conteudoContracheque');
-    conteudoDiv.innerHTML = `
-        <div class="logo">
-            <div class="logo-nome">TOPGEO</div>
-            <div class="logo-sub">ENGENHARIA E SERVIÇOS LTDA</div>
-        </div>
-        <h2>Olá, ${funcionario.nome}! 👋</h2>
-        <p>Seus contracheques:</p>
-    `;
     
-    meusContraches.forEach(cont => {
-        // Marcar como visualizado
-        if (!cont.visualizado) {
-            cont.visualizado = true;
-            cont.dataVisualizacao = new Date().toLocaleString();
-            salvarContracheques();
-        }
-        
-        const linkDrive = cont.link;
-        
-        conteudoDiv.innerHTML += `
-            <div class="item-contracheque" style="margin:15px 0; flex-direction:column; text-align:center;">
-                <strong style="font-size:18px; color:#003399;">📄 ${cont.mes}</strong>
-                <small>Enviado: ${cont.dataEnvio}</small>
-                ${cont.visualizado ? `<div class="status-visualizado" style="margin:5px auto;">✓ Visualizado em ${cont.dataVisualizacao}</div>` : ''}
-                
-                <div class="botoes-acao">
-                    <a href="${linkDrive}" target="_blank" class="btn-pdf">👀 Visualizar</a>
-                    <button onclick="baixarPDF('${linkDrive}', '${cont.mes}')" class="btn-baixar">📥 Baixar</button>
-                    <button onclick="compartilharWhatsApp('${linkDrive}', '${cont.mes}')" class="btn-whatsapp">📱 WhatsApp</button>
-                </div>
+    if (meusContraches.length === 0) {
+        conteudoDiv.innerHTML = `
+            <div class="logo">
+                <div class="logo-nome">TOPGEO</div>
+                <div class="logo-sub">ENGENHARIA E SERVIÇOS LTDA</div>
+            </div>
+            <h2>Olá, ${funcionario.nome}! 👋</h2>
+            <div class="sucesso" style="background:#fff3cd; color:#856404;">
+                ⚠️ Nenhum contracheque encontrado ainda.
             </div>
         `;
-    });
+    } else {
+        conteudoDiv.innerHTML = `
+            <div class="logo">
+                <div class="logo-nome">TOPGEO</div>
+                <div class="logo-sub">ENGENHARIA E SERVIÇOS LTDA</div>
+            </div>
+            <h2>Olá, ${funcionario.nome}! 👋</h2>
+            <p>Seus contracheques:</p>
+        `;
+        
+        meusContraches.forEach(cont => {
+            conteudoDiv.innerHTML += `
+                <div class="item-contracheque" style="margin:15px 0; flex-direction:column; text-align:center;">
+                    <strong style="font-size:18px; color:#003399;">📄 ${cont.mes}</strong>
+                    <small>Enviado: ${cont.dataEnvio}</small>
+                    <div class="botoes-acao">
+                        <a href="${cont.link}" target="_blank" class="btn-pdf">👀 Visualizar</a>
+                        <button onclick="baixarPDF('${cont.link}', '${cont.mes}')" class="btn-baixar">📥 Baixar</button>
+                        <button onclick="compartilharWhatsApp('${cont.link}', '${cont.mes}')" class="btn-whatsapp">📱 WhatsApp</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
 }
 
 function baixarPDF(link, mes) {
     window.open(link, '_blank');
     setTimeout(() => {
-        alert(`✅ PDF de ${mes} aberto. Toque nos 3 pontos ⋮ e escolha "Baixar" para salvar no celular.`);
+        alert(`✅ PDF de ${mes} aberto. Toque nos 3 pontos ⋮ e escolha "Baixar".`);
     }, 1000);
 }
 
 function compartilharWhatsApp(link, mes) {
-    const texto = `📄 *TOPGEO - Meu Contracheque*\n\nSeu contracheque de ${mes} está disponível!\n\n🔗 Acesse: ${link}\n\n📱 App: https://edilsonsousa856-stack.github.io/app-contracheque/index.html`;
-    const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
-    window.open(url, '_blank');
+    const texto = `📄 TOPGEO - Contracheque ${mes}\n\nLink: ${link}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
 }
 
 function mostrarRecuperarSenha() {
@@ -152,24 +144,11 @@ function recuperarSenha() {
         return;
     }
     
-    if (!funcionario.email) {
-        document.getElementById('msgRecuperar').innerHTML = 'Este funcionário não tem email cadastrado. Contate o admin.';
-        return;
-    }
-    
-    // Gerar nova senha
     const novaSenha = Math.floor(Math.random() * 999999).toString().padStart(6, '0');
     funcionario.senha = novaSenha;
     salvarFuncionarios();
     
-    // Enviar email
-    enviarEmail(
-        funcionario.email,
-        'TOPGEO - Recuperação de Senha',
-        `Olá ${funcionario.nome}!\n\nSua nova senha é: ${novaSenha}\n\nAcesse: https://edilsonsousa856-stack.github.io/app-contracheque/index.html\n\nTOPGEO Engenharia`
-    );
-    
-    document.getElementById('msgRecuperar').innerHTML = `<div class="sucesso">✅ Nova senha enviada para ${funcionario.email}! Verifique seu spam.</div>`;
+    document.getElementById('msgRecuperar').innerHTML = `<div class="sucesso">✅ Sua nova senha: ${novaSenha}</div>`;
     
     setTimeout(() => {
         voltarLoginRecuperar();
@@ -189,7 +168,7 @@ function voltarLogin() {
     document.getElementById('senhaLogin').value = '';
 }
 
-// ========== PARTE DO ADMINISTRADOR ==========
+// ========== PARTE DO ADMIN ==========
 function loginAdmin() {
     const senha = document.getElementById('senhaAdmin')?.value;
     if (senha === 'admin123') {
@@ -236,7 +215,7 @@ function enviarContracheque() {
     
     const funcionario = funcionarios.find(f => f.id === funcionarioId);
     
-    contracheques.push({
+    const novoContracheque = {
         id: Date.now(),
         funcionarioId: funcionarioId,
         funcionarioNome: funcionario.nome,
@@ -247,23 +226,15 @@ function enviarContracheque() {
         dataEnvio: new Date().toLocaleString(),
         visualizado: false,
         dataVisualizacao: null
-    });
+    };
     
+    contracheques.push(novoContracheque);
     salvarContracheques();
-    
-    // Enviar email de notificação
-    if (funcionario.email) {
-        enviarEmail(
-            funcionario.email,
-            `TOPGEO - Novo Contracheque ${mes}`,
-            `Olá ${funcionario.nome}!\n\nSeu contracheque de ${mes} já está disponível!\n\nAcesse: https://edilsonsousa856-stack.github.io/app-contracheque/index.html\n\nLogin: ${funcionario.codigo}\n\nTOPGEO Engenharia`
-        );
-    }
     
     document.getElementById('mesContracheque').value = '';
     document.getElementById('linkPDF').value = '';
     
-    alert(`✅ Contracheque de ${mes} enviado para ${funcionario.nome}! Email enviado.`);
+    alert(`✅ Contracheque de ${mes} enviado para ${funcionario.nome}!`);
     
     listarTodosContraches();
     carregarRelatorio();
@@ -283,7 +254,6 @@ function listarFuncionariosAdmin() {
                     <strong>${func.codigo}</strong><br>
                     ${func.nome}<br>
                     <small>Senha: ${func.senha}</small><br>
-                    <small>Email: ${func.email || 'Não cadastrado'}</small><br>
                     <small>📄 ${qtd} contracheque(s)</small>
                 </div>
                 <div>
@@ -336,7 +306,6 @@ function carregarRelatorio() {
         return;
     }
     
-    // Agrupar por funcionário
     const relatorio = {};
     contracheques.forEach(cont => {
         if (!relatorio[cont.funcionarioId]) {
@@ -345,16 +314,11 @@ function carregarRelatorio() {
                 codigo: cont.funcionarioCodigo,
                 total: 0,
                 vistos: 0,
-                naoVistos: 0,
                 detalhes: []
             };
         }
         relatorio[cont.funcionarioId].total++;
-        if (cont.visualizado) {
-            relatorio[cont.funcionarioId].vistos++;
-        } else {
-            relatorio[cont.funcionarioId].naoVistos++;
-        }
+        if (cont.visualizado) relatorio[cont.funcionarioId].vistos++;
         relatorio[cont.funcionarioId].detalhes.push({
             mes: cont.mes,
             visualizado: cont.visualizado,
@@ -365,20 +329,11 @@ function carregarRelatorio() {
     relatorioDiv.innerHTML = '';
     for (let id in relatorio) {
         const r = relatorio[id];
+        const naoVistos = r.total - r.vistos;
         relatorioDiv.innerHTML += `
             <div class="card" style="margin-bottom:15px;">
                 <h3>${r.nome} (${r.codigo})</h3>
-                <p>📊 Total: ${r.total} | ✅ Vistos: ${r.vistos} | ❌ Não vistos: ${r.naoVistos}</p>
-                <div style="margin-top:10px;">
-                    ${r.detalhes.map(d => `
-                        <div class="relatorio-item">
-                            <span>📄 ${d.mes}</span>
-                            ${d.visualizado ? 
-                                `<span class="status-visualizado">✓ Visualizado em ${d.data}</span>` : 
-                                `<span class="status-nao-visualizado">⏳ Não visualizado</span>`}
-                        </div>
-                    `).join('')}
-                </div>
+                <p>📊 Total: ${r.total} | ✅ Vistos: ${r.vistos} | ❌ Não vistos: ${naoVistos}</p>
             </div>
         `;
     }
@@ -445,7 +400,7 @@ function editarFuncionario(id) {
         func.senha = novaSenha;
         salvarFuncionarios();
         listarFuncionariosAdmin();
-        alert(`Senha alterada para: ${novaSenha}`);
+        alert(`Senha alterada!`);
     }
 }
 
@@ -473,4 +428,5 @@ function mostrarAba(aba) {
     if (aba === 'relatorios') carregarRelatorio();
 }
 
+// INICIAR
 carregarDados();
