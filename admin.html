@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv='cache-control' content='no-cache'>
+    <meta http-equiv='expires' content='0'>
+    <meta http-equiv='pragma' content='no-cache'>
+    <title>Admin - Contracheques</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="admin-panel">
+            <!-- TELA DE LOGIN DO ADMIN -->
+            <div id="telaLoginAdmin">
+                <h1>🔐 Painel Administrativo</h1>
+                <input type="password" id="senhaAdmin" placeholder="Senha do administrador">
+                <button onclick="loginAdmin()">Entrar</button>
+                <p style="text-align:center; margin-top:15px; color:#999;">Senha: admin123</p>
+            </div>
+            
+            <!-- PAINEL PRINCIPAL -->
+            <div id="painelAdmin" style="display:none;">
+                <div class="admin-header">
+                    <h1>📊 Envio de Contracheques</h1>
+                    <button onclick="logoutAdmin()" class="btn-sair">Sair</button>
+                </div>
+                
+                <!-- ABAS -->
+                <div class="abas">
+                    <button class="aba-ativa" onclick="mostrarAba('enviar')">📤 Enviar</button>
+                    <button onclick="mostrarAba('funcionarios')">👥 Funcionários</button>
+                    <button onclick="mostrarAba('listar')">📋 Todos os Enviados</button>
+                </div>
+                
+                <!-- ABA ENVIAR CONTRACHEQUE -->
+                <div id="abaEnviar" class="aba-conteudo">
+                    <div class="card">
+                        <h2>📤 Enviar contracheque para um funcionário</h2>
+                        
+                        <label>Selecione o funcionário:</label>
+                        <select id="selFuncionario">
+                            <option value="">-- Selecione --</option>
+                        </select>
+                        
+                        <label>Mês/Ano do contracheque:</label>
+                        <input type="month" id="mesContracheque">
+                        
+                        <label>Link do PDF (Google Drive, Dropbox, etc):</label>
+                        <input type="text" id="linkPDF" placeholder="https://...">
+                        <small>Cole o link do PDF que você salvou no Drive ou outro serviço</small>
+                        
+                        <button onclick="enviarContracheque()">📨 Enviar Contracheque</button>
+                    </div>
+                </div>
+                
+                <!-- ABA GERENCIAR FUNCIONÁRIOS -->
+                <div id="abaFuncionarios" class="aba-conteudo" style="display:none;">
+                    <div class="card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h2>👥 Funcionários Cadastrados</h2>
+                            <button onclick="abrirModalFuncionario()" style="width:auto; background:#28a745;">+ Novo</button>
+                        </div>
+                        <div id="listaFuncionarios" style="margin-top:20px;"></div>
+                    </div>
+                </div>
+                
+                <!-- ABA LISTAR TODOS OS ENVIADOS -->
+                <div id="abaListar" class="aba-conteudo" style="display:none;">
+                    <div class="card">
+                        <h2>📋 Histórico de Contracheques Enviados</h2>
+                        <div id="listaEnviados"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAL PARA ADICIONAR FUNCIONÁRIO -->
+    <div id="modalFuncionario" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+        <div style="background:white; max-width:400px; margin:100px auto; padding:30px; border-radius:15px;">
+            <h2>➕ Novo Funcionário</h2>
+            <label>Código (único):</label>
+            <input type="text" id="novoCodigo" placeholder="Ex: FUNC001">
+            <label>Nome completo:</label>
+            <input type="text" id="novoNome" placeholder="Nome do funcionário">
+            <label>Senha de acesso:</label>
+            <input type="text" id="novaSenha" placeholder="Senha" value="123456">
+            <div style="margin-top:20px; display:flex; gap:10px;">
+                <button onclick="salvarFuncionario()" style="flex:1;">Salvar</button>
+                <button onclick="fecharModal()" style="flex:1; background:#6c757d;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv='cache-control' content='no-cache'>
+    <meta http-equiv='expires' content='0'>
+    <meta http-equiv='pragma' content='no-cache'>
+    <title>Meu Contracheque</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- TELA DE LOGIN -->
+        <div id="telaLogin" class="login-box">
+            <div style="text-align:center; margin-bottom:20px;">
+                <div style="font-size:50px;">📄</div>
+                <h1>Meu Contracheque</h1>
+                <p>Digite seu código e senha</p>
+            </div>
+            
+            <input type="text" id="codigoLogin" placeholder="Código do funcionário">
+            <input type="password" id="senhaLogin" placeholder="Sua senha">
+            <button onclick="fazerLogin()">Entrar</button>
+            
+            <div id="msgErro" class="erro" style="margin-top:15px;"></div>
+        </div>
+        
+        <!-- TELA DO CONTRACHEQUE (aparece depois do login) -->
+        <div id="telaContracheque" class="login-box" style="display:none;">
+            <div id="conteudoContracheque"></div>
+            <button onclick="voltarLogin()" class="btn-voltar">Voltar</button>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
