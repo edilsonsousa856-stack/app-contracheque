@@ -1,49 +1,73 @@
 // ============================================
-// SISTEMA TOPGEO - VERSÃO COM DADOS PADRÃO
+// TOPGEO - CONTRA CHEQUES COM FIREBASE
 // ============================================
 
-// FUNCIONÁRIOS PADRÃO (existem em todos os dispositivos)
-const FUNCIONARIOS_PADRAO = [
-    { id: 1, codigo: "FUNC001", nome: "João Silva", senha: "123456", email: "joao@exemplo.com" },
-    { id: 2, codigo: "FUNC002", nome: "Maria Santos", senha: "123456", email: "maria@exemplo.com" },
-    { id: 3, codigo: "FUNC003", nome: "Carlos Souza", senha: "123456", email: "carlos@exemplo.com" },
-    { id: 4, codigo: "FUNC004", nome: "Ana Oliveira", senha: "123456", email: "ana@exemplo.com" },
-    { id: 5, codigo: "FUNC005", nome: "Pedro Lima", senha: "123456", email: "pedro@exemplo.com" }
-];
+// ⚠️ COLE SEU firebaseConfig AQUI ⚠️
+const firebaseConfig = {
+  apiKey: "COLE_SUA_API_KEY_AQUI",
+  authDomain: "COLE_SEU_AUTH_DOMAIN_AQUI",
+  projectId: "COLE_SEU_PROJECT_ID_AQUI",
+  storageBucket: "COLE_SEU_STORAGE_BUCKET_AQUI",
+  messagingSenderId: "COLE_SEU_MESSAGING_SENDER_ID_AQUI",
+  appId: "COLE_SUA_APP_ID_AQUI"
+};
 
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Coleções no Firebase
+const funcionariosRef = db.collection('funcionarios');
+const contrachequesRef = db.collection('contracheques');
+
+// Dados locais
 let funcionarios = [];
 let contracheques = [];
 
-// ========== CARREGAR DADOS ==========
-function carregarDados() {
-    // Carregar funcionários (ou usar os padrão)
-    let funcSalvos = localStorage.getItem('funcionarios');
-    
-    if (funcSalvos) {
-        funcionarios = JSON.parse(funcSalvos);
-    } else {
-        // Primeira vez: carregar funcionários padrão
-        funcionarios = [...FUNCIONARIOS_PADRAO];
-        salvarFuncionarios();
-    }
+// ========== CARREGAR DADOS DO FIREBASE ==========
+async function carregarDados() {
+    // Carregar funcionários
+    const funcSnapshot = await funcionariosRef.get();
+    funcionarios = [];
+    funcSnapshot.forEach(doc => {
+        funcionarios.push({ id: doc.id, ...doc.data() });
+    });
     
     // Carregar contracheques
-    const contSalvos = localStorage.getItem('contracheques');
-    if (contSalvos) {
-        contracheques = JSON.parse(contSalvos);
+    const contSnapshot = await contrachequesRef.get();
+    contracheques = [];
+    contSnapshot.forEach(doc => {
+        contracheques.push({ id: doc.id, ...doc.data() });
+    });
+    
+    // Se não tiver funcionários, adicionar padrão
+    if (funcionarios.length === 0) {
+        await adicionarFuncionariosPadrao();
+    }
+    
+    // Atualizar interface se for admin
+    if (window.location.pathname.includes('admin.html')) {
+        if (document.getElementById('painelAdmin') && document.getElementById('painelAdmin').style.display !== 'none') {
+            carregarAdmin();
+        }
     }
 }
 
-function salvarFuncionarios() {
-    localStorage.setItem('funcionarios', JSON.stringify(funcionarios));
+async function adicionarFuncionariosPadrao() {
+    const padrao = [
+        { codigo: "FUNC001", nome: "João Silva", senha: "123456", email: "joao@email.com" },
+        { codigo: "FUNC002", nome: "Maria Santos", senha: "123456", email: "maria@email.com" },
+        { codigo: "FUNC003", nome: "Carlos Souza", senha: "123456", email: "carlos@email.com" }
+    ];
+    
+    for (let func of padrao) {
+        await funcionariosRef.add(func);
+        funcionarios.push(func);
+    }
 }
 
-function salvarContracheques() {
-    localStorage.setItem('contracheques', JSON.stringify(contracheques));
-}
-
-// ========== PARTE DO COLABORADOR ==========
-function fazerLogin() {
+// ========== FUNÇÕES DO COLABORADOR ==========
+async function fazerLogin() {
     const codigo = document.getElementById('codigoLogin')?.value;
     const senha = document.getElementById('senhaLogin')?.value;
     
@@ -52,7 +76,8 @@ function fazerLogin() {
         return;
     }
     
-    // Buscar funcionário
+    await carregarDados();
+    
     const funcionario = funcionarios.find(f => f.codigo === codigo && f.senha === senha);
     
     if (!funcionario) {
@@ -60,10 +85,8 @@ function fazerLogin() {
         return;
     }
     
-    // Buscar contracheques deste funcionário
     const meusContraches = contracheques.filter(c => c.funcionarioId === funcionario.id);
     
-    // Mostrar tela do contracheque
     document.getElementById('telaLogin').style.display = 'none';
     document.getElementById('telaContracheque').style.display = 'block';
     
@@ -76,9 +99,7 @@ function fazerLogin() {
                 <div class="logo-sub">ENGENHARIA E SERVIÇOS LTDA</div>
             </div>
             <h2>Olá, ${funcionario.nome}! 👋</h2>
-            <div class="sucesso" style="background:#fff3cd; color:#856404;">
-                ⚠️ Nenhum contracheque encontrado ainda.
-            </div>
+            <p>Nenhum contracheque encontrado.</p>
         `;
     } else {
         conteudoDiv.innerHTML = `
@@ -90,7 +111,13 @@ function fazerLogin() {
             <p>Seus contracheques:</p>
         `;
         
-        meusContraches.forEach(cont => {
+        for (let cont of meusContraches) {
+            if (!cont.visualizado) {
+                cont.visualizado = true;
+                cont.dataVisualizacao = new Date().toLocaleString();
+                await contrachequesRef.doc(cont.id).update({ visualizado: true, dataVisualizacao: cont.dataVisualizacao });
+            }
+            
             conteudoDiv.innerHTML += `
                 <div class="item-contracheque" style="margin:15px 0; flex-direction:column; text-align:center;">
                     <strong style="font-size:18px; color:#003399;">📄 ${cont.mes}</strong>
@@ -102,15 +129,13 @@ function fazerLogin() {
                     </div>
                 </div>
             `;
-        });
+        }
     }
 }
 
 function baixarPDF(link, mes) {
     window.open(link, '_blank');
-    setTimeout(() => {
-        alert(`✅ PDF de ${mes} aberto. Toque nos 3 pontos ⋮ e escolha "Baixar".`);
-    }, 1000);
+    alert(`✅ PDF de ${mes} aberto. Toque nos 3 pontos ⋮ e escolha "Baixar".`);
 }
 
 function compartilharWhatsApp(link, mes) {
@@ -126,17 +151,16 @@ function mostrarRecuperarSenha() {
 function voltarLoginRecuperar() {
     document.getElementById('telaRecuperar').style.display = 'none';
     document.getElementById('telaLogin').style.display = 'block';
-    document.getElementById('codigoRecuperar').value = '';
 }
 
-function recuperarSenha() {
+async function recuperarSenha() {
     const codigo = document.getElementById('codigoRecuperar')?.value;
-    
     if (!codigo) {
         document.getElementById('msgRecuperar').innerHTML = 'Digite seu código!';
         return;
     }
     
+    await carregarDados();
     const funcionario = funcionarios.find(f => f.codigo === codigo);
     
     if (!funcionario) {
@@ -146,13 +170,9 @@ function recuperarSenha() {
     
     const novaSenha = Math.floor(Math.random() * 999999).toString().padStart(6, '0');
     funcionario.senha = novaSenha;
-    salvarFuncionarios();
+    await funcionariosRef.doc(funcionario.id).update({ senha: novaSenha });
     
     document.getElementById('msgRecuperar').innerHTML = `<div class="sucesso">✅ Sua nova senha: ${novaSenha}</div>`;
-    
-    setTimeout(() => {
-        voltarLoginRecuperar();
-    }, 3000);
 }
 
 function mostrarErro(msg) {
@@ -164,11 +184,9 @@ function mostrarErro(msg) {
 function voltarLogin() {
     document.getElementById('telaLogin').style.display = 'block';
     document.getElementById('telaContracheque').style.display = 'none';
-    document.getElementById('codigoLogin').value = '';
-    document.getElementById('senhaLogin').value = '';
 }
 
-// ========== PARTE DO ADMIN ==========
+// ========== FUNÇÕES DO ADMIN ==========
 function loginAdmin() {
     const senha = document.getElementById('senhaAdmin')?.value;
     if (senha === 'admin123') {
@@ -183,10 +201,10 @@ function loginAdmin() {
 function logoutAdmin() {
     document.getElementById('telaLoginAdmin').style.display = 'block';
     document.getElementById('painelAdmin').style.display = 'none';
-    if(document.getElementById('senhaAdmin')) document.getElementById('senhaAdmin').value = '';
 }
 
-function carregarAdmin() {
+async function carregarAdmin() {
+    await carregarDados();
     carregarSelectFuncionarios();
     listarFuncionariosAdmin();
     listarTodosContraches();
@@ -203,8 +221,8 @@ function carregarSelectFuncionarios() {
     });
 }
 
-function enviarContracheque() {
-    const funcionarioId = parseInt(document.getElementById('selFuncionario')?.value);
+async function enviarContracheque() {
+    const funcionarioId = document.getElementById('selFuncionario')?.value;
     const mes = document.getElementById('mesContracheque')?.value;
     const link = document.getElementById('linkPDF')?.value;
     
@@ -216,11 +234,9 @@ function enviarContracheque() {
     const funcionario = funcionarios.find(f => f.id === funcionarioId);
     
     const novoContracheque = {
-        id: Date.now(),
         funcionarioId: funcionarioId,
         funcionarioNome: funcionario.nome,
         funcionarioCodigo: funcionario.codigo,
-        funcionarioEmail: funcionario.email,
         mes: mes,
         link: link,
         dataEnvio: new Date().toLocaleString(),
@@ -228,13 +244,14 @@ function enviarContracheque() {
         dataVisualizacao: null
     };
     
+    const docRef = await contrachequesRef.add(novoContracheque);
+    novoContracheque.id = docRef.id;
     contracheques.push(novoContracheque);
-    salvarContracheques();
+    
+    alert(`✅ Contracheque de ${mes} enviado para ${funcionario.nome}!`);
     
     document.getElementById('mesContracheque').value = '';
     document.getElementById('linkPDF').value = '';
-    
-    alert(`✅ Contracheque de ${mes} enviado para ${funcionario.nome}!`);
     
     listarTodosContraches();
     carregarRelatorio();
@@ -257,8 +274,8 @@ function listarFuncionariosAdmin() {
                     <small>📄 ${qtd} contracheque(s)</small>
                 </div>
                 <div>
-                    <button onclick="editarFuncionario(${func.id})" style="background:#ffc107;">✏️</button>
-                    <button onclick="excluirFuncionario(${func.id})" style="background:#dc3545;">❌</button>
+                    <button onclick="editarFuncionario('${func.id}')" style="background:#ffc107;">✏️</button>
+                    <button onclick="excluirFuncionario('${func.id}')" style="background:#dc3545;">❌</button>
                 </div>
             </div>
         `;
@@ -290,7 +307,7 @@ function listarTodosContraches() {
                 </div>
                 <div>
                     <a href="${cont.link}" target="_blank">📄 Ver PDF</a>
-                    <button onclick="excluirContracheque(${cont.id})" style="background:#dc3545;">❌</button>
+                    <button onclick="excluirContracheque('${cont.id}')" style="background:#dc3545;">❌</button>
                 </div>
             </div>
         `;
@@ -313,17 +330,11 @@ function carregarRelatorio() {
                 nome: cont.funcionarioNome,
                 codigo: cont.funcionarioCodigo,
                 total: 0,
-                vistos: 0,
-                detalhes: []
+                vistos: 0
             };
         }
         relatorio[cont.funcionarioId].total++;
         if (cont.visualizado) relatorio[cont.funcionarioId].vistos++;
-        relatorio[cont.funcionarioId].detalhes.push({
-            mes: cont.mes,
-            visualizado: cont.visualizado,
-            data: cont.dataVisualizacao
-        });
     });
     
     relatorioDiv.innerHTML = '';
@@ -339,10 +350,10 @@ function carregarRelatorio() {
     }
 }
 
-function excluirContracheque(id) {
+async function excluirContracheque(id) {
     if (confirm('Excluir este contracheque?')) {
+        await contrachequesRef.doc(id).delete();
         contracheques = contracheques.filter(c => c.id !== id);
-        salvarContracheques();
         listarTodosContraches();
         carregarRelatorio();
         alert('Removido!');
@@ -365,7 +376,7 @@ function fecharModal() {
     if (modal) modal.style.display = 'none';
 }
 
-function salvarFuncionario() {
+async function salvarFuncionario() {
     const codigo = document.getElementById('novoCodigo')?.value;
     const nome = document.getElementById('novoNome')?.value;
     const email = document.getElementById('novoEmail')?.value;
@@ -376,43 +387,49 @@ function salvarFuncionario() {
         return;
     }
     
-    const novoId = Math.max(...funcionarios.map(f => f.id), 0) + 1;
-    funcionarios.push({
-        id: novoId,
+    const novoFuncionario = {
         codigo: codigo.toUpperCase(),
         nome: nome,
         email: email || '',
         senha: senha || '123456'
-    });
+    };
     
-    salvarFuncionarios();
+    const docRef = await funcionariosRef.add(novoFuncionario);
+    novoFuncionario.id = docRef.id;
+    funcionarios.push(novoFuncionario);
+    
     fecharModal();
     carregarAdmin();
     alert(`✅ ${nome} adicionado!`);
 }
 
-function editarFuncionario(id) {
+async function editarFuncionario(id) {
     const func = funcionarios.find(f => f.id === id);
     if (!func) return;
     
     const novaSenha = prompt(`Nova senha para ${func.nome}:`, func.senha);
     if (novaSenha && novaSenha !== func.senha) {
         func.senha = novaSenha;
-        salvarFuncionarios();
+        await funcionariosRef.doc(id).update({ senha: novaSenha });
         listarFuncionariosAdmin();
         alert(`Senha alterada!`);
     }
 }
 
-function excluirFuncionario(id) {
+async function excluirFuncionario(id) {
     const func = funcionarios.find(f => f.id === id);
     if (!func) return;
     
     if (confirm(`Excluir ${func.nome} e todos seus contracheques?`)) {
+        await funcionariosRef.doc(id).delete();
+        
+        const contParaExcluir = contracheques.filter(c => c.funcionarioId === id);
+        for (let cont of contParaExcluir) {
+            await contrachequesRef.doc(cont.id).delete();
+        }
+        
         funcionarios = funcionarios.filter(f => f.id !== id);
         contracheques = contracheques.filter(c => c.funcionarioId !== id);
-        salvarFuncionarios();
-        salvarContracheques();
         carregarAdmin();
         alert(`Removido!`);
     }
