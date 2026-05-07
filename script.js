@@ -2,21 +2,21 @@
 // TOPGEO - CONTRA CHEQUES COM FIREBASE
 // ============================================
 
-// ⚠️ COLE SEU firebaseConfig AQUI ⚠️
+// SEU FIREBASE CONFIG
 const firebaseConfig = {
-  apiKey: "COLE_SUA_API_KEY_AQUI",
-  authDomain: "COLE_SEU_AUTH_DOMAIN_AQUI",
-  projectId: "COLE_SEU_PROJECT_ID_AQUI",
-  storageBucket: "COLE_SEU_STORAGE_BUCKET_AQUI",
-  messagingSenderId: "COLE_SEU_MESSAGING_SENDER_ID_AQUI",
-  appId: "COLE_SUA_APP_ID_AQUI"
+  apiKey: "AIzaSyAxTmuguNwrvHQ4M-I8KVqKtH-DXFQLjHI",
+  authDomain: "topgeo-contracheques.firebaseapp.com",
+  projectId: "topgeo-contracheques",
+  storageBucket: "topgeo-contracheques.firebasestorage.app",
+  messagingSenderId: "957586831839",
+  appId: "1:957586831839:web:2cb931645a111bc899ac6a"
 };
 
 // Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Coleções no Firebase
+// Coleções
 const funcionariosRef = db.collection('funcionarios');
 const contrachequesRef = db.collection('contracheques');
 
@@ -24,32 +24,38 @@ const contrachequesRef = db.collection('contracheques');
 let funcionarios = [];
 let contracheques = [];
 
-// ========== CARREGAR DADOS DO FIREBASE ==========
+// ========== CARREGAR DADOS ==========
 async function carregarDados() {
-    // Carregar funcionários
-    const funcSnapshot = await funcionariosRef.get();
-    funcionarios = [];
-    funcSnapshot.forEach(doc => {
-        funcionarios.push({ id: doc.id, ...doc.data() });
-    });
-    
-    // Carregar contracheques
-    const contSnapshot = await contrachequesRef.get();
-    contracheques = [];
-    contSnapshot.forEach(doc => {
-        contracheques.push({ id: doc.id, ...doc.data() });
-    });
-    
-    // Se não tiver funcionários, adicionar padrão
-    if (funcionarios.length === 0) {
-        await adicionarFuncionariosPadrao();
-    }
-    
-    // Atualizar interface se for admin
-    if (window.location.pathname.includes('admin.html')) {
-        if (document.getElementById('painelAdmin') && document.getElementById('painelAdmin').style.display !== 'none') {
-            carregarAdmin();
+    try {
+        // Carregar funcionários
+        const funcSnapshot = await funcionariosRef.get();
+        funcionarios = [];
+        funcSnapshot.forEach(doc => {
+            funcionarios.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Carregar contracheques
+        const contSnapshot = await contrachequesRef.get();
+        contracheques = [];
+        contSnapshot.forEach(doc => {
+            contracheques.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Se não tiver funcionários, adicionar padrão
+        if (funcionarios.length === 0) {
+            await adicionarFuncionariosPadrao();
         }
+        
+        // Atualizar interface se for admin
+        if (window.location.pathname.includes('admin.html')) {
+            const painel = document.getElementById('painelAdmin');
+            if (painel && painel.style.display !== 'none') {
+                carregarAdmin();
+            }
+        }
+    } catch (erro) {
+        console.error("Erro ao carregar dados:", erro);
+        alert("Erro ao conectar com Firebase. Verifique sua internet.");
     }
 }
 
@@ -61,8 +67,8 @@ async function adicionarFuncionariosPadrao() {
     ];
     
     for (let func of padrao) {
-        await funcionariosRef.add(func);
-        funcionarios.push(func);
+        const docRef = await funcionariosRef.add(func);
+        funcionarios.push({ id: docRef.id, ...func });
     }
 }
 
@@ -115,7 +121,10 @@ async function fazerLogin() {
             if (!cont.visualizado) {
                 cont.visualizado = true;
                 cont.dataVisualizacao = new Date().toLocaleString();
-                await contrachequesRef.doc(cont.id).update({ visualizado: true, dataVisualizacao: cont.dataVisualizacao });
+                await contrachequesRef.doc(cont.id).update({ 
+                    visualizado: true, 
+                    dataVisualizacao: cont.dataVisualizacao 
+                });
             }
             
             conteudoDiv.innerHTML += `
@@ -151,6 +160,7 @@ function mostrarRecuperarSenha() {
 function voltarLoginRecuperar() {
     document.getElementById('telaRecuperar').style.display = 'none';
     document.getElementById('telaLogin').style.display = 'block';
+    document.getElementById('codigoRecuperar').value = '';
 }
 
 async function recuperarSenha() {
@@ -173,6 +183,10 @@ async function recuperarSenha() {
     await funcionariosRef.doc(funcionario.id).update({ senha: novaSenha });
     
     document.getElementById('msgRecuperar').innerHTML = `<div class="sucesso">✅ Sua nova senha: ${novaSenha}</div>`;
+    
+    setTimeout(() => {
+        voltarLoginRecuperar();
+    }, 3000);
 }
 
 function mostrarErro(msg) {
@@ -184,6 +198,8 @@ function mostrarErro(msg) {
 function voltarLogin() {
     document.getElementById('telaLogin').style.display = 'block';
     document.getElementById('telaContracheque').style.display = 'none';
+    document.getElementById('codigoLogin').value = '';
+    document.getElementById('senhaLogin').value = '';
 }
 
 // ========== FUNÇÕES DO ADMIN ==========
@@ -201,6 +217,7 @@ function loginAdmin() {
 function logoutAdmin() {
     document.getElementById('telaLoginAdmin').style.display = 'block';
     document.getElementById('painelAdmin').style.display = 'none';
+    if(document.getElementById('senhaAdmin')) document.getElementById('senhaAdmin').value = '';
 }
 
 async function carregarAdmin() {
@@ -237,6 +254,7 @@ async function enviarContracheque() {
         funcionarioId: funcionarioId,
         funcionarioNome: funcionario.nome,
         funcionarioCodigo: funcionario.codigo,
+        funcionarioEmail: funcionario.email || '',
         mes: mes,
         link: link,
         dataEnvio: new Date().toLocaleString(),
@@ -394,13 +412,18 @@ async function salvarFuncionario() {
         senha: senha || '123456'
     };
     
-    const docRef = await funcionariosRef.add(novoFuncionario);
-    novoFuncionario.id = docRef.id;
-    funcionarios.push(novoFuncionario);
-    
-    fecharModal();
-    carregarAdmin();
-    alert(`✅ ${nome} adicionado!`);
+    try {
+        const docRef = await funcionariosRef.add(novoFuncionario);
+        novoFuncionario.id = docRef.id;
+        funcionarios.push(novoFuncionario);
+        
+        fecharModal();
+        carregarAdmin();
+        alert(`✅ ${nome} adicionado com sucesso!`);
+    } catch (erro) {
+        console.error("Erro ao salvar:", erro);
+        alert("Erro ao salvar no Firebase. Verifique sua conexão.");
+    }
 }
 
 async function editarFuncionario(id) {
